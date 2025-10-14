@@ -29,7 +29,7 @@ jobs:
         run: |
           cd precheck-developer
           mkdir -p build
-          cat universal_precheck.sh elixir_precheck.sh node_precheck.sh check_secret.sh shell_integration.sh > build/precheck
+          cat universal_precheck.sh elixir_precheck.sh nodejs_precheck.sh check_secret.sh shell_integration.sh > build/precheck
           chmod +x build/precheck
           tar -czf ../precheck_v1.0.0.tar.gz -C build precheck
           echo "✅ Precheck artifact built."
