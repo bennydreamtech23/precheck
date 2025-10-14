@@ -1,0 +1,97 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'  # Trigger on v1.0.0, v2.1.3, etc.
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        include:
+          - os: linux
+            arch: amd64
+          - os: linux
+            arch: arm64
+          - os: darwin
+            arch: amd64
+          - os: darwin
+            arch: arm64
+
+    steps:
+      - name: Checkout private repo
+        uses: actions/checkout@v4
+        with:
+          repository: YOUR_USERNAME/precheck-developer
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: ./private
+
+      - name: Checkout public repo
+        uses: actions/checkout@v4
+        with:
+          path: ./public
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      - name: Create build directory
+        run: mkdir -p ./build
+
+      - name: Combine scripts into single binary
+        run: |
+          cat ./private/universal-precheck.sh > ./build/precheck
+          echo "" >> ./build/precheck
+          cat ./private/elixir-precheck.sh >> ./build/precheck
+          echo "" >> ./build/precheck
+          cat ./private/nodejs-precheck.sh >> ./build/precheck
+          chmod +x ./build/precheck
+
+      - name: Package binary
+        run: |
+          cd ./build
+          tar -czf precheck_v${{ steps.version.outputs.VERSION }}_${{ matrix.os }}_${{ matrix.arch }}.tar.gz precheck
+          ls -lh precheck_*
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: binaries
+          path: ./build/precheck_*.tar.gz
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: binaries
+          path: ./dist
+
+      - name: List artifacts
+        run: ls -lh ./dist/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ./dist/precheck_*.tar.gz
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify Release
+        run: |
+          echo "Release created successfully!"
+          echo "Download URL: https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/precheck_*.tar.gz"

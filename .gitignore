@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+*.egg-info/
+
+# Build artifacts
+dist/
+build/
+*.tar.gz
+*.zip
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Binaries (we'll use GitHub Releases instead)
+precheck
+precheck_*
