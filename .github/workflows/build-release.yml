@@ -45,11 +45,11 @@ jobs:
           # Precheck Combined Binary
           SCRIPT
           
-          cat private-repo/universal-precheck.sh >> build/precheck
+          cat private-repo/universal_precheck.sh >> build/precheck
           echo "" >> build/precheck
-          cat private-repo/elixir-precheck.sh >> build/precheck
+          cat private-repo/elixir_precheck.sh >> build/precheck
           echo "" >> build/precheck
-          cat private-repo/nodejs-precheck.sh >> build/precheck
+          cat private-repo/nodejs_precheck.sh >> build/precheck
           
           chmod +x build/precheck
 
