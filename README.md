@@ -2,11 +2,11 @@
 
 A comprehensive pre-deployment validation toolkit for modern development teams. Automatically detects your project type and runs intelligent checks to ensure deployment readiness.
 
-[![Version](https://img.shields.io/badge/version-1.0.0--beta-blue.svg)](https://github.com/bennydreamtech23/precheck-developer)
+[![Version](https://img.shields.io/badge/version-1.0.0--beta-blue.svg)](https://github.com/bennydreamtech23/precheck)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Supported Languages](https://img.shields.io/badge/supports-Elixir%20%7C%20Node.js-orange.svg)](#supported-languages)
 
-> **Beta Release**: This is a beta version for testing and feedback. Report issues on [GitHub](https://github.com/bennydreamtech23/precheck-developer/issues).
+> **Beta Release**: This is a beta version for testing and feedback. Report issues on [GitHub](https://github.com/bennydreamtech23/precheck/issues).
 
 ---
 
@@ -15,13 +15,13 @@ A comprehensive pre-deployment validation toolkit for modern development teams. 
 ### One-Line Installation
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/bennydreamtech23/precheck-developer/master/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/bennydreamtech23/precheck/master/install.sh | bash
 ```
 
 ### Manual Installation
 
 ```bash
-git clone https://github.com/bennydreamtech23/precheck-developer.git
+git clone https://github.com/bennydreamtech23/precheck.git
 cd precheck-developer
 chmod +x install.sh
 ./install.sh
