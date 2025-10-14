@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: bennydreamtech23/precheck-developer
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PRIVATE_REPO_TOKEN }}
           path: private-repo
 
       - name: Extract version
