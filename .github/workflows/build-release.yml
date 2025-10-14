@@ -1,97 +1,105 @@
 name: Build and Release
 
 on:
+  workflow_dispatch:  # Allows manual trigger
   push:
     tags:
-      - 'v*'  # Trigger on v1.0.0, v2.1.3, etc.
+      - 'v*'
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    
     strategy:
       matrix:
         include:
-          - os: linux
-            arch: amd64
-          - os: linux
-            arch: arm64
-          - os: darwin
-            arch: amd64
-          - os: darwin
-            arch: arm64
+          - { os: linux, arch: amd64 }
+          - { os: linux, arch: arm64 }
+          - { os: darwin, arch: amd64 }
+          - { os: darwin, arch: arm64 }
 
     steps:
+      - name: Checkout public repo
+        uses: actions/checkout@v4
+
       - name: Checkout private repo
         uses: actions/checkout@v4
         with:
-          repository: YOUR_USERNAME/precheck-developer
+          repository: bennydreamtech23/precheck-developer
           token: ${{ secrets.GITHUB_TOKEN }}
-          path: ./private
+          path: private-repo
 
-      - name: Checkout public repo
-        uses: actions/checkout@v4
-        with:
-          path: ./public
-
-      - name: Extract version from tag
+      - name: Extract version
         id: version
         run: |
           VERSION=${GITHUB_REF#refs/tags/v}
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-          echo "Version: $VERSION"
+          echo "Building version: $VERSION"
 
       - name: Create build directory
-        run: mkdir -p ./build
+        run: mkdir -p build
 
-      - name: Combine scripts into single binary
+      - name: Combine scripts
         run: |
-          cat ./private/universal-precheck.sh > ./build/precheck
-          echo "" >> ./build/precheck
-          cat ./private/elixir-precheck.sh >> ./build/precheck
-          echo "" >> ./build/precheck
-          cat ./private/nodejs-precheck.sh >> ./build/precheck
-          chmod +x ./build/precheck
+          cat > build/precheck << 'SCRIPT'
+          #!/bin/bash
+          # Precheck Combined Binary
+          SCRIPT
+          
+          cat private-repo/universal-precheck.sh >> build/precheck
+          echo "" >> build/precheck
+          cat private-repo/elixir-precheck.sh >> build/precheck
+          echo "" >> build/precheck
+          cat private-repo/nodejs-precheck.sh >> build/precheck
+          
+          chmod +x build/precheck
+
+      - name: Test binary
+        run: |
+          ./build/precheck --version
 
       - name: Package binary
         run: |
-          cd ./build
+          cd build
           tar -czf precheck_v${{ steps.version.outputs.VERSION }}_${{ matrix.os }}_${{ matrix.arch }}.tar.gz precheck
-          ls -lh precheck_*
+          ls -lh precheck_*.tar.gz
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: binaries
-          path: ./build/precheck_*.tar.gz
+          name: binaries-${{ matrix.os }}-${{ matrix.arch }}
+          path: build/precheck_*.tar.gz
+          retention-days: 1
 
   release:
     needs: build
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: binaries
-          path: ./dist
+          path: artifacts
 
-      - name: List artifacts
-        run: ls -lh ./dist/
+      - name: Flatten artifacts
+        run: |
+          mkdir -p dist
+          find artifacts -name "*.tar.gz" -exec cp {} dist/ \;
+          ls -lh dist/
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files: ./dist/precheck_*.tar.gz
+          files: dist/precheck_*.tar.gz
           draft: false
           prerelease: false
+          tag_name: ${{ github.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Verify Release
+      - name: Release Summary
         run: |
-          echo "Release created successfully!"
-          echo "Download URL: https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/precheck_*.tar.gz"
+          echo "✅ Release created successfully!"
+          echo "📦 Download: https://github.com/bennydreamtech23/precheck/releases/tag/${{ github.ref_name }}"
