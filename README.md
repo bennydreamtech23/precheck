@@ -16,13 +16,22 @@ A comprehensive pre-deployment validation toolkit for modern development teams. 
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/bennydreamtech23/precheck/master/install.sh | bash
+
+💡 If you get a “Permission denied” or “Operation not permitted” error, rerun with sudo:
+
+curl -fsSL https://raw.githubusercontent.com/bennydreamtech23/precheck/master/install.sh | sudo bash
+
+This will automatically download, extract, and install Precheck.
+
+Verify the install:
+precheck --version # → Precheck v1.0.0-beta
 ```
 
 ### Manual Installation
 
 ```bash
 git clone https://github.com/bennydreamtech23/precheck.git
-cd precheck-developer
+cd precheck
 chmod +x install.sh
 ./install.sh
 ```
