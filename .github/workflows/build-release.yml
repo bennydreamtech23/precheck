@@ -1,4 +1,3 @@
-
 name: Build and Release Precheck
 
 on:
@@ -17,29 +16,29 @@ jobs:
       - name: Checkout public repo
         uses: actions/checkout@v4
 
-      - name: Clone private repo
+      - name: Download pre-built binary from private repo
         env:
           PRIVATE_TOKEN: ${{ secrets.PRECHECK_PAT }}
         run: |
           git clone https://bennydreamtech23:${PRIVATE_TOKEN}@github.com/bennydreamtech23/precheck-developer.git
           cd precheck-developer
-          echo "✅ Private repo cloned successfully."
+          # Assume the private repo CI built the binary at bin/precheck
+          cp bin/precheck ../bin_precheck
 
-      - name: Build precheck artifact
+      - name: Prepare release artifact
         run: |
-          cd precheck-developer
-          mkdir -p build
-          cat universal_precheck.sh elixir_precheck.sh nodejs_precheck.sh check_secret.sh shell_integration.sh > build/precheck
-          chmod +x build/precheck
-          tar -czf ../precheck_v1.0.0.tar.gz -C build precheck
-          echo "✅ Precheck artifact built."
+          mkdir -p bin
+          mv bin_precheck bin/precheck
+          chmod +x bin/precheck
+          cp README.md LICENSE bin/
+          tar -czf precheck-v1.0.0-linux-x64.tar.gz bin
 
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.0-beta
-          name: "Precheck v1.0.0-beta"
-          body: "Beta release for testers"
-          files: precheck_v1.0.0.tar.gz
+          tag_name: v1.0.0
+          name: "Precheck v1.0.0"
+          body: "Stable release"
+          files: precheck-v1.0.0-linux-x64.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
