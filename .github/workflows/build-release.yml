@@ -16,21 +16,28 @@ jobs:
       - name: Checkout public repo
         uses: actions/checkout@v4
 
-      - name: Download pre-built binary from private repo
+      - name: Clone private repo
         env:
           PRIVATE_TOKEN: ${{ secrets.PRECHECK_PAT }}
         run: |
           git clone https://bennydreamtech23:${PRIVATE_TOKEN}@github.com/bennydreamtech23/precheck-developer.git
           cd precheck-developer
-          # Assume the private repo CI built the binary at bin/precheck
-          cp bin/precheck ../bin_precheck
+          echo "✅ Private repo cloned successfully."
+
+      - name: Build precheck binary
+        run: |
+          cd precheck-developer
+          mix deps.get
+          mix escript.build
+          mkdir -p ../bin
+          mv precheck ../bin/precheck
 
       - name: Prepare release artifact
         run: |
           mkdir -p bin
-          mv bin_precheck bin/precheck
+          mv bin/precheck bin/precheck
           chmod +x bin/precheck
-          cp README.md LICENSE bin/
+          cp precheck-developer/README.md precheck-developer/LICENSE bin/ || true
           tar -czf precheck-v1.0.0-linux-x64.tar.gz bin
 
       - name: Upload Release Asset
