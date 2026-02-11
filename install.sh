@@ -54,42 +54,45 @@ FILENAME="precheck-${VERSION}-${PLATFORM}.tar.gz"
 DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${VERSION}/${FILENAME}"
 
 # ── Download ──────────────────────────────────────────────────────────────────
+TEMP_DIR=$(mktemp -d)
 echo "⬇️  Downloading $FILENAME..."
-curl -fsSL "$DOWNLOAD_URL" -o "/tmp/$FILENAME" || {
+curl -fsSL "$DOWNLOAD_URL" -o "$TEMP_DIR/$FILENAME" || {
   echo "❌ Download failed. Check that release $VERSION exists and supports platform '$PLATFORM'."
+  rm -rf "$TEMP_DIR"
   exit 1
 }
 
 # ── Extract ───────────────────────────────────────────────────────────────────
 echo "📦 Extracting..."
-mkdir -p /tmp/precheck-install
-tar -xzf "/tmp/$FILENAME" -C /tmp/precheck-install
+tar -xzf "$TEMP_DIR/$FILENAME" -C "$TEMP_DIR"
 
 # ── Install binary ────────────────────────────────────────────────────────────
 INSTALL_DIR="/usr/local/bin"
 
-if [ -f "/tmp/precheck-install/bin/precheck-native" ]; then
+if [ -f "$TEMP_DIR/bin/precheck-native" ]; then
   echo "⚙️  Installing native binary..."
   if [ -w "$INSTALL_DIR" ]; then
-    cp /tmp/precheck-install/bin/precheck-native "$INSTALL_DIR/precheck-native"
+    cp "$TEMP_DIR/bin/precheck-native" "$INSTALL_DIR/precheck-native"
+    chmod +x "$INSTALL_DIR/precheck-native"
   else
-    sudo cp /tmp/precheck-install/bin/precheck-native "$INSTALL_DIR/precheck-native"
+    sudo cp "$TEMP_DIR/bin/precheck-native" "$INSTALL_DIR/precheck-native"
+    sudo chmod +x "$INSTALL_DIR/precheck-native"
   fi
-  chmod +x "$INSTALL_DIR/precheck-native"
 fi
 
-if [ -f "/tmp/precheck-install/bin/precheck" ]; then
+if [ -f "$TEMP_DIR/bin/precheck" ]; then
   echo "⚙️  Installing precheck..."
   if [ -w "$INSTALL_DIR" ]; then
-    cp /tmp/precheck-install/bin/precheck "$INSTALL_DIR/precheck"
+    cp "$TEMP_DIR/bin/precheck" "$INSTALL_DIR/precheck"
+    chmod +x "$INSTALL_DIR/precheck"
   else
-    sudo cp /tmp/precheck-install/bin/precheck "$INSTALL_DIR/precheck"
+    sudo cp "$TEMP_DIR/bin/precheck" "$INSTALL_DIR/precheck"
+    sudo chmod +x "$INSTALL_DIR/precheck"
   fi
-  chmod +x "$INSTALL_DIR/precheck"
 fi
 
 # ── Cleanup ───────────────────────────────────────────────────────────────────
-rm -rf "/tmp/$FILENAME" /tmp/precheck-install
+rm -rf "$TEMP_DIR"
 
 # ── Done ──────────────────────────────────────────────────────────────────────
 echo ""
