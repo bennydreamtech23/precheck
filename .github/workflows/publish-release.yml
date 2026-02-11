@@ -1,0 +1,81 @@
+name: Publish Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version tag to publish (e.g. v1.0.0)"
+        required: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout public repo
+        uses: actions/checkout@v4
+
+      - name: Download release assets from private repo
+        env:
+          PRIVATE_TOKEN: ${{ secrets.PRECHECK_PAT }}
+          VERSION: ${{ github.event.inputs.version }}
+        run: |
+          mkdir -p assets
+
+          echo "📥 Fetching release assets for $VERSION from private repo..."
+
+          RELEASE_JSON=$(curl -s \
+            -H "Authorization: Bearer $PRIVATE_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/bennydreamtech23/precheck-developer/releases/tags/$VERSION")
+
+          # Bail early with a helpful message if release not found
+          if echo "$RELEASE_JSON" | grep -q '"Not Found"'; then
+            echo "❌ Release $VERSION not found in private repo."
+            exit 1
+          fi
+
+          # Download each .tar.gz asset
+          echo "$RELEASE_JSON" | jq -r '.assets[] | "\(.url) \(.name)"' | while read -r URL NAME; do
+            echo "⬇️  Downloading $NAME..."
+            curl -L \
+              -H "Authorization: Bearer $PRIVATE_TOKEN" \
+              -H "Accept: application/octet-stream" \
+              "$URL" \
+              -o "assets/$NAME"
+          done
+
+          echo ""
+          echo "✅ Downloaded assets:"
+          ls -lh assets/
+
+      - name: Copy install script into release assets
+        run: |
+          cp install.sh assets/install.sh
+
+      - name: Create GitHub Release on public repo
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.version }}
+          name: "Precheck ${{ github.event.inputs.version }}"
+          body: |
+            ## Install
+
+            ### Linux (x64)
+            ```bash
+            curl -fsSL https://github.com/bennydreamtech23/precheck/releases/download/${{ github.event.inputs.version }}/install.sh | bash
+            ```
+
+            ### macOS (ARM / Apple Silicon)
+            ```bash
+            curl -fsSL https://github.com/bennydreamtech23/precheck/releases/download/${{ github.event.inputs.version }}/install.sh | bash
+            ```
+
+            Or manually download the `.tar.gz` for your platform from the assets below.
+          files: |
+            assets/*.tar.gz
+            assets/install.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
