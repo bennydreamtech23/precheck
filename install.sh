@@ -74,9 +74,13 @@ if [ -f "$TEMP_DIR/bin/precheck-native" ]; then
   if [ -w "$INSTALL_DIR" ]; then
     cp "$TEMP_DIR/bin/precheck-native" "$INSTALL_DIR/precheck-native"
     chmod +x "$INSTALL_DIR/precheck-native"
+    # Create symlink for convenience
+    ln -sf "$INSTALL_DIR/precheck-native" "$INSTALL_DIR/precheck"
   else
     sudo cp "$TEMP_DIR/bin/precheck-native" "$INSTALL_DIR/precheck-native"
     sudo chmod +x "$INSTALL_DIR/precheck-native"
+    # Create symlink for convenience
+    sudo ln -sf "$INSTALL_DIR/precheck-native" "$INSTALL_DIR/precheck"
   fi
 fi
 
@@ -98,4 +102,17 @@ rm -rf "$TEMP_DIR"
 echo ""
 echo "✅ Precheck $VERSION installed successfully!"
 echo ""
-precheck --help
+echo "To start using precheck, run one of the following:"
+echo ""
+echo "  # Option 1: Start a new terminal session"
+echo "  # Option 2: Reload your shell config"
+if [ -n "$ZSH_VERSION" ]; then
+  echo "  source ~/.zshrc"
+elif [ -n "$BASH_VERSION" ]; then
+  echo "  source ~/.bashrc"
+else
+  echo "  source ~/.profile"
+fi
+echo ""
+echo "Then run:"
+echo "  precheck --help"

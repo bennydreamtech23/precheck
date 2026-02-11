@@ -22,7 +22,18 @@ curl -fsSL https://github.com/bennydreamtech23/precheck/releases/download/v1.0.0
 curl -fsSL https://github.com/bennydreamtech23/precheck/releases/download/v1.0.0/install.sh | bash
 ```
 
-> 💡 **Tip:** If you encounter a "Permission denied" error, run with `sudo`:
+> 💡 **Note:** After installation, you may need to reload your shell:
+> ```bash
+> # For bash users
+> source ~/.bashrc
+> 
+> # For zsh users
+> source ~/.zshrc
+> 
+> # Or simply open a new terminal window
+> ```
+>
+> **Permission Issues?** If you encounter "Permission denied" errors, run with `sudo`:
 > ```bash
 > curl -fsSL https://github.com/bennydreamtech23/precheck/releases/download/v1.0.0/install.sh | sudo bash
 > ```
@@ -116,6 +127,41 @@ The latest release (`v1.0.0`) includes:
 | **install.sh** | 3.77 KB | `934b0e70efd1dbcb4056c1962f0e8a4d16a33477f00fe41a14d67d4217aa91dc` |
 | **precheck-v1.0.0-linux-x64.tar.gz** | 898 KB | `38ce46cea16db894b5ea90b9b4819d98c03ecabf3994a43a9a7a4540362432ac` |
 | **precheck-v1.0.0-darwin-arm64.tar.gz** | 760 KB | `a0af4d23e1c680440d692ed11abce93c61d0fe7c8bde1e9f7089ecd04364daf8` |
+
+---
+
+## Troubleshooting
+
+### "command not found: precheck" after installation
+
+If you get this error after installing, it means your shell hasn't reloaded the PATH yet. Try one of these solutions:
+
+**Option 1: Reload your shell config**
+```bash
+# For bash
+source ~/.bashrc
+
+# For zsh
+source ~/.zshrc
+```
+
+**Option 2: Open a new terminal window**
+
+Simply close and reopen your terminal.
+
+**Option 3: Verify the binary exists**
+```bash
+ls -la /usr/local/bin/precheck
+```
+
+If it exists but still doesn't work, `/usr/local/bin` might not be in your PATH. Add it:
+```bash
+# For bash (add to ~/.bashrc)
+export PATH="/usr/local/bin:$PATH"
+
+# For zsh (add to ~/.zshrc)
+export PATH="/usr/local/bin:$PATH"
+```
 
 ---
 
