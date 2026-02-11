@@ -11,16 +11,35 @@ ERLANG_FOUND=false
 ERL_VERSION="unknown"
 
 if [ -n "$SUDO_USER" ]; then
-  # Running with sudo, check original user's PATH
-  if su - "$SUDO_USER" -c "command -v erl" &> /dev/null; then
+  # Try to detect shell config file
+  USER_HOME=$(eval echo "~$SUDO_USER")
+  if [ -f "$USER_HOME/.zshrc" ]; then
+    SHELL_RC="$USER_HOME/.zshrc"
+  elif [ -f "$USER_HOME/.bashrc" ]; then
+    SHELL_RC="$USER_HOME/.bashrc"
+  else
+    SHELL_RC=""
+  fi
+
+  # Compose command to source shell config and check for erl/asdf
+  if [ -n "$SHELL_RC" ]; then
+    CHECK_CMD="source $SHELL_RC; command -v erl"
+    ASDF_CMD="source $SHELL_RC; command -v asdf"
+    WHICH_ERL_CMD="source $SHELL_RC; asdf which erl"
+  else
+    CHECK_CMD="command -v erl"
+    ASDF_CMD="command -v asdf"
+    WHICH_ERL_CMD="asdf which erl"
+  fi
+
+  if su - "$SUDO_USER" -c "$CHECK_CMD" &> /dev/null; then
     ERLANG_FOUND=true
-    ERL_VERSION=$(su - "$SUDO_USER" -c "erl -eval 'erlang:display(erlang:system_info(otp_release)), halt().' -noshell 2>/dev/null" || echo "unknown")
-  elif su - "$SUDO_USER" -c "command -v asdf" &> /dev/null; then
-    # Check asdf shims for erl
-    if su - "$SUDO_USER" -c "asdf which erl" &> /dev/null; then
+    ERL_VERSION=$(su - "$SUDO_USER" -c "source $SHELL_RC; erl -eval 'erlang:display(erlang:system_info(otp_release)), halt().' -noshell 2>/dev/null" || echo "unknown")
+  elif su - "$SUDO_USER" -c "$ASDF_CMD" &> /dev/null; then
+    if su - "$SUDO_USER" -c "$WHICH_ERL_CMD" &> /dev/null; then
       ERLANG_FOUND=true
-      ERL_PATH=$(su - "$SUDO_USER" -c "asdf which erl")
-      ERL_VERSION=$(su - "$SUDO_USER" -c "$ERL_PATH -eval 'erlang:display(erlang:system_info(otp_release)), halt().' -noshell 2>/dev/null" || echo "unknown")
+      ERL_PATH=$(su - "$SUDO_USER" -c "$WHICH_ERL_CMD")
+      ERL_VERSION=$(su - "$SUDO_USER" -c "source $SHELL_RC; $ERL_PATH -eval 'erlang:display(erlang:system_info(otp_release)), halt().' -noshell 2>/dev/null" || echo "unknown")
     fi
   fi
 else
