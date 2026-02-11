@@ -6,7 +6,27 @@ VERSION="${1:-latest}"
 
 # ── Check for Erlang/OTP ──────────────────────────────────────────────────────
 echo "🔍 Checking for Erlang/OTP..."
-if ! command -v erl &> /dev/null; then
+
+# Check in current user's environment (works even when script is run with sudo)
+if [ -n "$SUDO_USER" ]; then
+  # Script is running with sudo, check the original user's PATH
+  if ! su - "$SUDO_USER" -c "command -v erl" &> /dev/null; then
+    ERLANG_FOUND=false
+  else
+    ERLANG_FOUND=true
+    ERL_VERSION=$(su - "$SUDO_USER" -c "erl -eval 'erlang:display(erlang:system_info(otp_release)), halt().' -noshell 2>/dev/null" || echo "unknown")
+  fi
+else
+  # Script is running as regular user
+  if ! command -v erl &> /dev/null; then
+    ERLANG_FOUND=false
+  else
+    ERLANG_FOUND=true
+    ERL_VERSION=$(erl -eval 'erlang:display(erlang:system_info(otp_release)), halt().' -noshell 2>/dev/null || echo "unknown")
+  fi
+fi
+
+if [ "$ERLANG_FOUND" = false ]; then
   echo ""
   echo "⚠️  WARNING: Erlang/OTP is not installed!"
   echo ""
@@ -22,7 +42,6 @@ if ! command -v erl &> /dev/null; then
   echo ""
   exit 1
 else
-  ERL_VERSION=$(erl -eval 'erlang:display(erlang:system_info(otp_release)), halt().' -noshell)
   echo "✅ Erlang/OTP found (version: $ERL_VERSION)"
 fi
 
