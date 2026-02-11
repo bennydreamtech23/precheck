@@ -7,28 +7,39 @@ VERSION="${1:-latest}"
 # ── Check for Erlang/OTP ──────────────────────────────────────────────────────
 echo "🔍 Checking for Erlang/OTP..."
 
-# Check in current user's environment (works even when script is run with sudo)
+ERLANG_FOUND=false
+ERL_VERSION="unknown"
+
 if [ -n "$SUDO_USER" ]; then
-  # Script is running with sudo, check the original user's PATH
-  if ! su - "$SUDO_USER" -c "command -v erl" &> /dev/null; then
-    ERLANG_FOUND=false
-  else
+  # Running with sudo, check original user's PATH
+  if su - "$SUDO_USER" -c "command -v erl" &> /dev/null; then
     ERLANG_FOUND=true
     ERL_VERSION=$(su - "$SUDO_USER" -c "erl -eval 'erlang:display(erlang:system_info(otp_release)), halt().' -noshell 2>/dev/null" || echo "unknown")
+  elif su - "$SUDO_USER" -c "command -v asdf" &> /dev/null; then
+    # Check asdf shims for erl
+    if su - "$SUDO_USER" -c "asdf which erl" &> /dev/null; then
+      ERLANG_FOUND=true
+      ERL_PATH=$(su - "$SUDO_USER" -c "asdf which erl")
+      ERL_VERSION=$(su - "$SUDO_USER" -c "$ERL_PATH -eval 'erlang:display(erlang:system_info(otp_release)), halt().' -noshell 2>/dev/null" || echo "unknown")
+    fi
   fi
 else
-  # Script is running as regular user
-  if ! command -v erl &> /dev/null; then
-    ERLANG_FOUND=false
-  else
+  # Regular user
+  if command -v erl &> /dev/null; then
     ERLANG_FOUND=true
     ERL_VERSION=$(erl -eval 'erlang:display(erlang:system_info(otp_release)), halt().' -noshell 2>/dev/null || echo "unknown")
+  elif command -v asdf &> /dev/null; then
+    if asdf which erl &> /dev/null; then
+      ERLANG_FOUND=true
+      ERL_PATH=$(asdf which erl)
+      ERL_VERSION=$($ERL_PATH -eval 'erlang:display(erlang:system_info(otp_release)), halt().' -noshell 2>/dev/null || echo "unknown")
+    fi
   fi
 fi
 
 if [ "$ERLANG_FOUND" = false ]; then
   echo ""
-  echo "⚠️  WARNING: Erlang/OTP is not installed!"
+  echo "⚠️  WARNING: Erlang/OTP is not installed or not found in your PATH!"
   echo ""
   echo "Precheck requires Erlang/OTP to run. Please install it first:"
   echo ""
@@ -37,6 +48,11 @@ if [ "$ERLANG_FOUND" = false ]; then
   echo ""
   echo "  macOS (Homebrew):"
   echo "    brew install erlang"
+  echo ""
+  echo "  Or use asdf:"
+  echo "    asdf plugin-add erlang"
+  echo "    asdf install erlang latest"
+  echo "    asdf global erlang latest"
   echo ""
   echo "After installing Erlang, run this script again."
   echo ""
