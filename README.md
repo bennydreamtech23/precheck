@@ -10,6 +10,28 @@ A comprehensive pre-deployment validation toolkit for modern development teams. 
 
 ## Installation
 
+### Prerequisites
+
+**⚠️ Important:** Precheck is an Elixir escript and requires **Erlang/OTP** to be installed on your system.
+
+**Install Erlang/OTP:**
+
+**Ubuntu/Debian:**
+```bash
+sudo apt-get update
+sudo apt-get install -y erlang-base
+```
+
+**macOS (with Homebrew):**
+```bash
+brew install erlang
+```
+
+**Verify Erlang is installed:**
+```bash
+erl -version
+```
+
 ### Quick Install (Recommended)
 
 **Linux (x64)**

@@ -4,6 +4,28 @@ set -e
 REPO="bennydreamtech23/precheck"
 VERSION="${1:-latest}"
 
+# ── Check for Erlang/OTP ──────────────────────────────────────────────────────
+echo "🔍 Checking for Erlang/OTP..."
+if ! command -v erl &> /dev/null; then
+  echo ""
+  echo "⚠️  WARNING: Erlang/OTP is not installed!"
+  echo ""
+  echo "Precheck requires Erlang/OTP to run. Please install it first:"
+  echo ""
+  echo "  Ubuntu/Debian:"
+  echo "    sudo apt-get update && sudo apt-get install -y erlang-base"
+  echo ""
+  echo "  macOS (Homebrew):"
+  echo "    brew install erlang"
+  echo ""
+  echo "After installing Erlang, run this script again."
+  echo ""
+  exit 1
+else
+  ERL_VERSION=$(erl -eval 'erlang:display(erlang:system_info(otp_release)), halt().' -noshell)
+  echo "✅ Erlang/OTP found (version: $ERL_VERSION)"
+fi
+
 # ── Resolve "latest" to the actual tag ───────────────────────────────────────
 if [ "$VERSION" = "latest" ]; then
   VERSION=$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" \
@@ -69,21 +91,6 @@ tar -xzf "$TEMP_DIR/$FILENAME" -C "$TEMP_DIR"
 # ── Install binary ────────────────────────────────────────────────────────────
 INSTALL_DIR="/usr/local/bin"
 
-if [ -f "$TEMP_DIR/bin/precheck-native" ]; then
-  echo "⚙️  Installing native binary..."
-  if [ -w "$INSTALL_DIR" ]; then
-    cp "$TEMP_DIR/bin/precheck-native" "$INSTALL_DIR/precheck-native"
-    chmod +x "$INSTALL_DIR/precheck-native"
-    # Create symlink for convenience
-    ln -sf "$INSTALL_DIR/precheck-native" "$INSTALL_DIR/precheck"
-  else
-    sudo cp "$TEMP_DIR/bin/precheck-native" "$INSTALL_DIR/precheck-native"
-    sudo chmod +x "$INSTALL_DIR/precheck-native"
-    # Create symlink for convenience
-    sudo ln -sf "$INSTALL_DIR/precheck-native" "$INSTALL_DIR/precheck"
-  fi
-fi
-
 if [ -f "$TEMP_DIR/bin/precheck" ]; then
   echo "⚙️  Installing precheck..."
   if [ -w "$INSTALL_DIR" ]; then
@@ -93,6 +100,10 @@ if [ -f "$TEMP_DIR/bin/precheck" ]; then
     sudo cp "$TEMP_DIR/bin/precheck" "$INSTALL_DIR/precheck"
     sudo chmod +x "$INSTALL_DIR/precheck"
   fi
+else
+  echo "❌ ERROR: precheck binary not found in archive!"
+  rm -rf "$TEMP_DIR"
+  exit 1
 fi
 
 # ── Cleanup ───────────────────────────────────────────────────────────────────
@@ -102,17 +113,32 @@ rm -rf "$TEMP_DIR"
 echo ""
 echo "✅ Precheck $VERSION installed successfully!"
 echo ""
-echo "To start using precheck, run one of the following:"
-echo ""
-echo "  # Option 1: Start a new terminal session"
-echo "  # Option 2: Reload your shell config"
-if [ -n "$ZSH_VERSION" ]; then
-  echo "  source ~/.zshrc"
-elif [ -n "$BASH_VERSION" ]; then
-  echo "  source ~/.bashrc"
+
+# Verify installation
+echo "🔍 Verifying installation..."
+if command -v precheck &> /dev/null; then
+  if precheck --version &> /dev/null || precheck --help &> /dev/null; then
+    echo "✅ Precheck is working correctly!"
+    echo ""
+    echo "To start using precheck, run one of the following:"
+    echo ""
+    echo "  # Option 1: Start a new terminal session"
+    echo "  # Option 2: Reload your shell config"
+    if [ -n "$ZSH_VERSION" ]; then
+      echo "  source ~/.zshrc"
+    elif [ -n "$BASH_VERSION" ]; then
+      echo "  source ~/.bashrc"
+    else
+      echo "  source ~/.profile"
+    fi
+    echo ""
+    echo "Then run:"
+    echo "  precheck --help"
+  else
+    echo "⚠️  Warning: precheck installed but may not be working correctly."
+    echo "This could be due to missing dependencies or Erlang configuration."
+  fi
 else
-  echo "  source ~/.profile"
+  echo "⚠️  Warning: precheck command not found in PATH."
+  echo "You may need to reload your shell or add /usr/local/bin to your PATH."
 fi
-echo ""
-echo "Then run:"
-echo "  precheck --help"
