@@ -1,9 +1,3 @@
-#!/usr/bin/env bash
-set -e
-
-REPO="bennydreamtech23/precheck"
-VERSION="${1:-latest}"
-
 # ── Check for Erlang/OTP ──────────────────────────────────────────────────────
 echo "🔍 Checking for Erlang/OTP..."
 
@@ -79,6 +73,13 @@ if [ "$ERLANG_FOUND" = false ]; then
 else
   echo "✅ Erlang/OTP found (version: $ERL_VERSION)"
 fi
+#!/usr/bin/env bash
+set -e
+
+REPO="bennydreamtech23/precheck"
+VERSION="${1:-latest}"
+
+
 
 # ── Resolve "latest" to the actual tag ───────────────────────────────────────
 if [ "$VERSION" = "latest" ]; then
@@ -162,7 +163,7 @@ fi
 
 
 # ── Install NIF library ───────────────────────────────────────────────────────
-NATIVE_DIR="$INSTALL_DIR/precheck-native/priv/native"
+NATIVE_DIR="$INSTALL_DIR/precheck/priv/native"
 if [ -f "$TEMP_DIR/priv/native/precheck_native.so" ]; then
   echo "⚙️  Installing native library..."
   if [ -w "$INSTALL_DIR" ]; then
