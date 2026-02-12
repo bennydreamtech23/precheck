@@ -160,6 +160,20 @@ else
   exit 1
 fi
 
+
+# ── Install NIF library ───────────────────────────────────────────────────────
+NATIVE_DIR="$INSTALL_DIR/precheck-native/priv/native"
+if [ -f "$TEMP_DIR/priv/native/precheck_native.so" ]; then
+  echo "⚙️  Installing native library..."
+  if [ -w "$INSTALL_DIR" ]; then
+    mkdir -p "$NATIVE_DIR"
+    cp "$TEMP_DIR/priv/native/precheck_native.so" "$NATIVE_DIR/precheck_native.so"
+  else
+    sudo mkdir -p "$NATIVE_DIR"
+    sudo cp "$TEMP_DIR/priv/native/precheck_native.so" "$NATIVE_DIR/precheck_native.so"
+  fi
+fi
+
 # ── Cleanup ───────────────────────────────────────────────────────────────────
 rm -rf "$TEMP_DIR"
 
