@@ -163,15 +163,15 @@ fi
 
 
 # ── Install NIF library ───────────────────────────────────────────────────────
-NATIVE_DIR="$INSTALL_DIR/precheck/priv/native"
+LIB_DIR="/usr/local/lib/precheck/priv/native"
 if [ -f "$TEMP_DIR/priv/native/precheck_native.so" ]; then
-  echo "⚙️  Installing native library..."
-  if [ -w "$INSTALL_DIR" ]; then
-    mkdir -p "$NATIVE_DIR"
-    cp "$TEMP_DIR/priv/native/precheck_native.so" "$NATIVE_DIR/precheck_native.so"
+  echo "⚙️  Installing native library to $LIB_DIR..."
+  if [ -w "/usr/local/lib" ]; then
+    mkdir -p "$LIB_DIR"
+    cp "$TEMP_DIR/priv/native/precheck_native.so" "$LIB_DIR/precheck_native.so"
   else
-    sudo mkdir -p "$NATIVE_DIR"
-    sudo cp "$TEMP_DIR/priv/native/precheck_native.so" "$NATIVE_DIR/precheck_native.so"
+    sudo mkdir -p "$LIB_DIR"
+    sudo cp "$TEMP_DIR/priv/native/precheck_native.so" "$LIB_DIR/precheck_native.so"
   fi
 fi
 
